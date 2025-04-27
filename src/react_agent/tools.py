@@ -6,23 +6,28 @@ These tools are intended as free examples to get started. For production use,
 consider implementing more robust and specialized tools tailored to your needs.
 """
 
+import subprocess
+import streamlit as st
 from typing import Any, Callable, List, Optional, cast
-
-from langchain_tavily import TavilySearch  # type: ignore[import-not-found]
+from langchain_core.tools import BaseTool
+from typing_extensions import Annotated
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import InjectedToolArg, tool, BaseTool
 
 from react_agent.configuration import Configuration
 
 
-async def search(query: str) -> Optional[dict[str, Any]]:
-    """Search for general web results.
-
-    This function performs a search using the Tavily search engine, which is designed
-    to provide comprehensive, accurate, and trusted results. It's particularly useful
-    for answering questions about current events.
+def k8sgpt_analyze() -> str:
+    """Run k8sgpt analyze command to analyze the information of the cluster.
     """
-    configuration = Configuration.from_context()
-    wrapped = TavilySearch(max_results=configuration.max_search_results)
-    return cast(dict[str, Any], await wrapped.ainvoke({"query": query}))
+
+    result = subprocess.run(
+        ["k8sgpt", "analyze"],
+        stdout = subprocess.PIPE,
+        stderr = subprocess.STDOUT,
+        text=True,
+    )
+    return str(result.stdout)
 
 
-TOOLS: List[Callable[..., Any]] = [search]
+TOOLS: List[Callable[..., Any]] = [k8sgpt_analyze]
